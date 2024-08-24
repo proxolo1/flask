@@ -1,4 +1,4 @@
-from flask import Flask, render_template, make_response, request
+from flask import Blueprint, Flask, render_template, make_response, request
 from flask_socketio import SocketIO, emit
 import uuid
 
@@ -12,13 +12,14 @@ socketio = SocketIO(app)
 session_user = {}
 player1_message = None
 player2_message = None
+main = Blueprint("main", __name__)
 
-@app.route("/")
+@main.route("/")
 def index():
     return render_template("index.html")
 
-@app.route("/player")
-def player():
+@main.route("/player")
+def player() :
     return render_template("player.html")
 
 @socketio.on('connect')
