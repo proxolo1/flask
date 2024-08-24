@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Page</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script> <!-- Include Socket.IO client -->
+    <style>
+        #status {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        #username-form {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="status">Connecting...</div>
+    <div id="username-form">
+        <label for="username">Enter your username:</label>
+        <input type="text" id="username" />
+        <button onclick="submitUsername()">Submit</button>
+    </div>
+
+    <script>
+        // Initialize the Socket.IO client
+        const socket = io("http://127.0.0.1:5000");
+
+        // Check if username and playerType are stored in localStorage
+        const storedUsername = localStorage.getItem('username');
+        const storedPlayerType = localStorage.getItem('playerType');
+
+        // If both exist, send them directly to the server
+        if (storedUsername && storedPlayerType) {
+            document.getElementById("status").innerText = `You are ${storedPlayerType}`;
+            document.getElementById("username-form").style.display = "none"; // Hide the form
+
+            // Send the stored username and player type to the server
+            socket.emit("message", {
+                type: storedPlayerType,
+                content: storedUsername
+            });
+        }
+
+        // Handle server messages
+        socket.on("message", (data) => {
+            if (data.type === "status") {
+                // Display the player status
+                document.getElementById("status").innerText = `You are ${data.content}`;
+                localStorage.setItem('playerType', data.content);
+
+                // Show the username input form if assigned as player1 or player2
+                if (!storedUsername && (data.content === "player1" || data.content === "player2")) {
+                    document.getElementById("username-form").style.display = "block";
+                }
+            } else {
+                console.log("Received message:", data);
+            }
+        });
+
+        // Connect to the Socket.IO server
+        socket.on("connect", () => {
+            console.log("Connected to Socket.IO server");
+
+            // Send a message to the server when the page loads
+            socket.emit("message", {
+                type: "init",
+                content: ""
+            });
+        });
+
+        // Function to submit the username
+        function submitUsername() {
+            const username = document.getElementById("username").value;
+            const playerType = localStorage.getItem('playerType'); // Get player type from localStorage
+
+            if (username && playerType) {
+                // Store the username in localStorage
+                localStorage.setItem('username', username);
+
+                // Send the username to the server
+                socket.emit("message", {
+                    type: playerType,  // Send type as player1 or player2
+                    content: username
+                });
+
+                // Hide the form after submission
+                document.getElementById("username-form").style.display = "none";
+            }
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+    </script>
+</body>
+
+</html>

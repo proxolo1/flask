@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script> <!-- Include Socket.IO client -->
+</head>
+<body>
+    <p>Hello World</p>
+
+    <a href="/player">Player</a>
+
+    <script>
+        // Initialize the Socket.IO client
+        const socket = io("http://127.0.0.1:5000"); // Replace with your server URL
+
+        // Connect to the Socket.IO server
+        socket.on("connect", () => {
+            console.log("Connected to Socket.IO server");
+        });
+
+        // Optional: handle server messages
+        socket.on("message", (data) => {
+            console.log("Received message:", data);
+
+            if (data.type === 'status') {
+                if (data.content === 'user_id_set') {
+                    setCookie("user_id", data.cookie, 10)
+                    console.log('User ID has been set by the server.');
+                } else if (data.content === 'user_id_exists') {
+                    console.log('User ID already exists.');
+                }
+            }
+        });
+
+        // Utility function to set a cookie
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        // Utility function to get a cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Check and store cookies
+        const userId = getCookie('user_id');
+        if (!userId) {
+            console.log('No user ID found. It will be set by the server.');
+        } else {
+            console.log('User ID:', userId);
+        }
+    </script>
+</body>
+</html>

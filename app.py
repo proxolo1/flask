@@ -2,33 +2,39 @@ from flask import Blueprint, Flask, render_template, make_response, request
 from flask_socketio import SocketIO, emit
 import uuid
 
+# Define the blueprint
+main = Blueprint("main", __name__)
+
+# Define routes for the blueprint
+@main.route("/")
+def index():
+    return render_template("index.html")
+
+@main.route("/player")
+def player():
+    return render_template("player.html")
+
+# Create Flask app and configure it
 app = Flask(__name__)
 app.config["DEBUG"] = True
 app.config["SECRET_KEY"] = "SECRET"
 
+# Register the blueprint with the app
+app.register_blueprint(main)
+
+# Initialize SocketIO
 socketio = SocketIO(app)
 
 # Dictionary to store session info
 session_user = {}
 player1_message = None
 player2_message = None
-main = Blueprint("main", __name__)
-
-@main.route("/")
-def index():
-    return render_template("index.html")
-
-@main.route("/player")
-def player() :
-    return render_template("player.html")
 
 @socketio.on('connect')
 def handle_connect():
     session_id = request.sid
-    # Check for a user ID in cookies
     user_id = request.cookies.get('user_id')
     if user_id is None:
-        # Generate a new user ID and set it in the response cookies
         user_id = str(uuid.uuid4())
         response = make_response()
         response.set_cookie('user_id', user_id)
@@ -68,16 +74,12 @@ def handle_message(data):
     elif 'message' in msg_type:
         store_player_message(session_id, content)
 
-        # Check if both players sent their messages
         if player1_message is not None and player2_message is not None:
-            # Compare messages and declare winner
             if player1_message == player2_message:
                 send_winner_notification()
 
-            # Notify admin with both player messages
             notify_admin_with_messages()
 
-            # Reset messages
             player1_message = None
             player2_message = None
 
@@ -86,7 +88,6 @@ def add_players(player_type, session_id, player_name):
     session_user[player_type] = {'player_name': player_name, 'session_id': session_id, 'user_id': user_id}
     emit('message', {'type': 'status', 'content': f"{player_type} added"}, to=session_id)
 
-    # Start game when player2 is added
     if player_type == 'player2':
         player1 = session_user.get('player1')
         admin = session_user.get('admin')
