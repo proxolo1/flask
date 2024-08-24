@@ -1,5 +1,6 @@
 from flask import Blueprint, Flask, render_template, make_response, request
 from flask_socketio import SocketIO, emit
+from flask_cors import CORS  # Import CORS
 import uuid
 
 # Define the blueprint
@@ -18,6 +19,9 @@ def player():
 app = Flask(__name__)
 app.config["DEBUG"] = True
 app.config["SECRET_KEY"] = "SECRET"
+
+# Initialize CORS to allow all origins
+CORS(app)
 
 # Register the blueprint with the app
 app.register_blueprint(main)
