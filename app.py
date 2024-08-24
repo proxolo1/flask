@@ -3,17 +3,9 @@ from flask_socketio import SocketIO, emit
 from flask_cors import CORS  # Import CORS
 import uuid
 
-# Define the blueprint
-main = Blueprint("main", __name__)
+
 
 # Define routes for the blueprint
-@main.route("/")
-def index():
-    return render_template("index.html")
-
-@main.route("/player")
-def player():
-    return render_template("player.html")
 
 # Create Flask app and configure it
 app = Flask(__name__)
@@ -23,8 +15,7 @@ app.config["SECRET_KEY"] = "SECRET"
 # Initialize CORS to allow all origins
 CORS(app)
 
-# Register the blueprint with the app
-app.register_blueprint(main)
+
 
 # Initialize SocketIO
 socketio = SocketIO(app)
